@@ -218,18 +218,34 @@ class Query<T extends Model> {
     _limit = limit;
   }
 
+  /// Execute this [Query] on the datastore, returning only the keys.
+  ///
+  /// Outside of transactions this method might return stale data or may not
+  /// return the newest updates performed on the datastore since updates
+  /// will be reflected in the indices in an eventual consistent way.
+  Stream<Key> keys() {
+    Key parent = _ancestorKey ?? Key.emptyKey(_partition);
+    return _runQuery(projection: ['__key__'])
+        .map<Key>((e) => Key(parent, T, e.key.elements.last.id));
+  }
+
   /// Execute this [Query] on the datastore.
   ///
   /// Outside of transactions this method might return stale data or may not
   /// return the newest updates performed on the datastore since updates
   /// will be reflected in the indices in an eventual consistent way.
   Stream<T> run() {
+    return _runQuery().map<T>(_db.modelDB.fromDatastoreEntity);
+  }
+
+  Stream<ds.Entity> _runQuery({List<String> projection}) {
     ds.Key ancestorKey;
     if (_ancestorKey != null) {
       ancestorKey = _db.modelDB.toDatastoreKey(_ancestorKey);
     }
     var query = ds.Query(
         ancestorKey: ancestorKey,
+        projection: projection,
         kind: _kind,
         filters: _filters,
         orders: _orders,
@@ -244,7 +260,7 @@ class Query<T extends Model> {
     return StreamFromPages<ds.Entity>((int pageSize) {
       return _db.datastore
           .query(query, transaction: _transaction, partition: partition);
-    }).stream.map<T>(_db.modelDB.fromDatastoreEntity);
+    }).stream;
   }
 
   // TODO:
