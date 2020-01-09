@@ -304,6 +304,9 @@ class Query {
   /// Restrict the result set to entities which have this  ancestorKey / parent.
   final Key ancestorKey;
 
+  /// Restrict the returned properties with a projection query.
+  final List<String> projection;
+
   /// Restrict the result set by a list of property [Filter]s.
   final List<Filter> filters;
 
@@ -319,6 +322,7 @@ class Query {
   Query(
       {this.ancestorKey,
       this.kind,
+      this.projection,
       this.filters,
       this.orders,
       this.offset,

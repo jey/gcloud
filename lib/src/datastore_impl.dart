@@ -199,6 +199,17 @@ class DatastoreImpl implements datastore.Datastore {
     return apiEntity;
   }
 
+  List<api.Projection> _convertDatastore2ApiProjection(
+      List<String> projection) {
+    if(projection == null) {
+      return null;
+    }
+    return projection
+        .map((propertyName) => api.PropertyReference()..name = propertyName)
+        .map((propertyRef) => api.Projection()..property = propertyRef)
+        .toList();
+  }
+
   static Map<datastore.FilterRelation, String> relationMapping = const {
     datastore.FilterRelation.LessThan: 'LESS_THAN',
     datastore.FilterRelation.LessThanOrEqual: 'LESS_THAN_OR_EQUAL',
@@ -434,6 +445,7 @@ class DatastoreImpl implements datastore.Datastore {
     // NOTE: We explicitly do not set 'limit' here, since this is handled by
     // QueryPageImpl.runQuery.
     var apiQuery = api.Query()
+      ..projection = _convertDatastore2ApiProjection(query.projection)
       ..filter = _convertDatastore2ApiFilters(query.filters, query.ancestorKey)
       ..order = _convertDatastore2ApiOrders(query.orders)
       ..offset = query.offset;
