@@ -112,7 +112,7 @@ class DatastoreImpl implements datastore.Datastore {
     } else if (value is String) {
       return apiValue..stringValue = value;
     } else if (value is DateTime) {
-      return apiValue..timestampValue = value.toIso8601String();
+      return apiValue..timestampValue = value.toUtc().toIso8601String();
     } else if (value is datastore.BlobValue) {
       return apiValue..blobValueAsBytes = value.bytes;
     } else if (value is datastore.Key) {
