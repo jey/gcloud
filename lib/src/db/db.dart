@@ -4,6 +4,12 @@
 
 part of gcloud.db;
 
+abstract class Queryable {
+  Future<List<T>> lookup<T extends Model>(List<Key> keys);
+  Future<T> lookupValue<T extends Model>(Key key, {T orElse()});
+  Query<T> query<T extends Model>({Partition partition, Key ancestorKey});
+}
+
 /// A function definition for transactional functions.
 ///
 /// The function will be given a [Transaction] object which can be used to make
@@ -15,7 +21,7 @@ typedef TransactionHandler<T> = Future<T> Function(Transaction transaction);
 /// It can be used for making lookups/queries and queue modifications
 /// (inserts/updates/deletes). Finally the transaction can be either committed
 /// or rolled back.
-class Transaction {
+class Transaction implements Queryable {
   static const int _TRANSACTION_STARTED = 0;
   static const int _TRANSACTION_ROLLED_BACK = 1;
   static const int _TRANSACTION_COMMITTED = 2;
@@ -75,7 +81,7 @@ class Transaction {
   ///
   /// Note that [ancestorKey] is required, since a transaction is not allowed to
   /// touch/look at an arbitrary number of rows.
-  Query<T> query<T extends Model>(Key ancestorKey, {Partition partition}) {
+  Query<T> query<T extends Model>({Key ancestorKey, Partition partition}) {
     // TODO(#25): The `partition` element is redundant and should be removed.
     if (partition == null) {
       partition = ancestorKey.partition;
@@ -277,7 +283,7 @@ class Query<T extends Model> {
   }
 }
 
-class DatastoreDB {
+class DatastoreDB implements Queryable {
   final ds.Datastore datastore;
   final ModelDB _modelDB;
   Partition _defaultPartition;
